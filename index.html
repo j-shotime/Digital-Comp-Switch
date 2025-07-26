@@ -1,23 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Bottom Navigation Bar</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <title>Digital Comp Switch</title>
+  <link rel="icon" href="favicon.ico"/>
+  <link rel="stylesheet" href="styles.css" />
+  <link id="dynamic-css" rel="stylesheet" href="pages/control.css" />
 </head>
 <body>
-
-  <div id="content">
-    <h1>Home</h1>
-    <p>Welcome to the homepage.</p>
-  </div>
+  <div id="content"></div>
 
   <nav class="bottom-nav">
     <button onclick="navigate(0)">Control</button>
-    <button onclick="navigate(1)">Search</button>
-    <button onclick="navigate(2)">Profile</button>
+    <button onclick="navigate(1)">Match</button>
+    <button onclick="navigate(2)">Driver Skills</button>
+    <button onclick="navigate(3)">Auto Skills</button>
+    <button onclick="navigate(4)">Custom</button>
   </nav>
 
-  <script src="script.js"></script>
+  <!-- Scripts -->
+  <script src="pages/control.js" type="module"></script>
+  <script src="pages/search.js" type="module"></script>
+  <script src="pages/profile.js" type="module"></script>
+  <script src="control.js"></script>
+  <script type="module" src="script.js"></script>
 </body>
 </html>

@@ -1,0 +1,7 @@
+export const controlHTML = `
+  <h1>Comp Switch Control</h1>
+  <button onclick="connectSerial()">🔌 Connect</button>
+  <br><br>
+  <button onclick="togglePin(0)">Enable/Disable</button>
+  <button onclick="togglePin(1)">Driver/Autonomous</button>
+`;
