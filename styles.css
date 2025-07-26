@@ -1,0 +1,38 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  padding-bottom: 60px; /* Space for the nav */
+}
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background-color: #d71731;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  border: none;
+}
+
+.bottom-nav button {
+  background: none;
+  border: none;
+  color: #ccc;
+  font-size: 16px;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.bottom-nav button.active,
+.bottom-nav button:hover {
+  color: #fff;
+  border-bottom: 2px solid #fff;
+}
+
+#content {
+  padding: 20px;
+  text-align: center;
+}

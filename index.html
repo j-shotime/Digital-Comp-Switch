@@ -2,16 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Comp Switch Control</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Bottom Navigation Bar</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-  <h1>Comp Switch Control</h1>
-  <button onclick="connectSerial()">🔌 Connect</button>
-  <br><br>
-  <button onclick="togglePin(0)">Enable/Disable</button>
-  <button onclick="togglePin(1)">Driver/Autonomous</button>
+  <div id="content">
+    <h1>Home</h1>
+    <p>Welcome to the homepage.</p>
+  </div>
+
+  <nav class="bottom-nav">
+    <button onclick="navigate(0)">Control</button>
+    <button onclick="navigate(1)">Search</button>
+    <button onclick="navigate(2)">Profile</button>
+  </nav>
 
   <script src="script.js"></script>
 </body>
