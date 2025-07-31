@@ -1,5 +1,7 @@
 body {
   margin: 0;
+  background-image: url('main_background.png');
+  background-repeat: repeat;
   font-family: Arial, sans-serif;
   padding-bottom: 60px;
   text-align: center;
@@ -11,7 +13,7 @@ body {
   left: 0;
   right: 0;
   height: 60px;
-  background-color: #d71731;
+  background-color: #c61e32;
   display: flex;
   justify-content: space-around;
   align-items: center;

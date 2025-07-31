@@ -1,6 +1,8 @@
-import { controlHTML } from './pages/control.js';
-import { searchHTML } from './pages/search.js';
-import { profileHTML } from './pages/profile.js';
+import { customHTML } from './pages/custom.js';
+import { calculatorHTML } from './pages/calculator.js';
+import { matchHTML } from './pages/match.js';
+import { switchHTML } from './pages/switch.js';
+import { skillsHTML } from './pages/skills.js';
 
 function loadCSS(href) {
   const link = document.getElementById('dynamic-css');
@@ -23,21 +25,36 @@ export function navigate(page) {
 
   switch (page) {
     case 0:
-      content.innerHTML = controlHTML;
-      loadCSS('pages/control.css');
+      content.innerHTML = customHTML;
+      loadCSS('pages/custom.css');
       break;
     case 1:
-      content.innerHTML = searchHTML;
-      loadCSS('pages/search.css');
+      content.innerHTML = skillsHTML;
+      loadCSS('pages/skills.css');
       break;
     case 2:
-      content.innerHTML = profileHTML;
-      loadCSS('pages/profile.css');
+      content.innerHTML = matchHTML;
+      loadCSS('pages/match.css');
+      prepMatch();
+      const startButton = document.getElementById('start-button');
+      if (startButton) {
+        startButton.addEventListener('click', () => {
+          toggleMatch(); // global function from javascript/match.js
+        });
+      }
+      break;
+    case 3:
+      content.innerHTML = switchHTML;
+      loadCSS('pages/switch.css');
+      break;
+    case 4:
+      content.innerHTML = calculatorHTML;
+      loadCSS('pages/calculator.css');
       break;
     default:
       content.innerHTML = "<h1>404</h1><p>Page not found.</p>";
   }
 }
 
-window.addEventListener('DOMContentLoaded', () => navigate(0));
-window.navigate = navigate; // So it works on button onclick
+window.addEventListener('DOMContentLoaded', () => navigate(3));
+window.navigate = navigate;

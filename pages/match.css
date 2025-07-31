@@ -1,0 +1,110 @@
+.match-view {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - 100px); /* Full viewport height */
+}
+
+.container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: transparent;
+}
+
+/* Centered Output Text */
+p {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-family: 'Noto Sans', sans-serif;
+  font-weight: normal;
+  font-size: 5rem;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  pointer-events: none; /* Optional: prevent clicks from interfering */
+}
+
+/* Progress Bars */
+.progress-bar {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+}
+
+/* Inner Ring */
+.progress-bar.inner {
+  width: 300px;
+  height: 300px;
+  background: conic-gradient(#c61d32 100%, transparent 0);
+  mask: radial-gradient(closest-side, transparent 82%, black 83%);
+  -webkit-mask: radial-gradient(closest-side, transparent 82%, black 83%);
+}
+
+/* Middle Ring */
+.progress-bar.middle {
+  width: 300px;
+  height: 300px;
+  background: conic-gradient(#b71c2d 100%, transparent 0);
+  mask: radial-gradient(closest-side, transparent 88%, black 89%);
+  -webkit-mask: radial-gradient(closest-side, transparent 88%, black 89%);
+}
+
+/* Outer Ring */
+.progress-bar.outer {
+  width: 300px;
+  height: 300px;
+  background: conic-gradient(#c61d32 100%, transparent 0);
+  mask: radial-gradient(closest-side, transparent 94%, black 95%);
+  -webkit-mask: radial-gradient(closest-side, transparent 94%, black 95%);
+}
+
+/* SVG Tracks */
+.track-svg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+
+h1 {
+  position: absolute;
+  top: 15%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-weight: normal;
+  font-size: 8rem;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* Optional: Style for the Start button */
+#start-button {
+  position: absolute;
+  top: 80%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin-top: 20px;
+  font-size: 1.2rem;
+  padding: 10px 20px;
+  background-color: #c61d32;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}

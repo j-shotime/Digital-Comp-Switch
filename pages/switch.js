@@ -1,4 +1,4 @@
-export const controlHTML = `
+export const switchHTML = `
   <h1>Comp Switch Control</h1>
   <button onclick="connectSerial()">🔌 Connect</button>
   <br><br>

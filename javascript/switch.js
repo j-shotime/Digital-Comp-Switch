@@ -1,6 +1,6 @@
 let port;
 let writer;
-let pinStates = [0, 0]; // Pin1 = index 0, Pin2 = index 1
+let pinStates = [0, 0]; // [Pin1, Pin2]
 
 window.connectSerial = async function () {
   try {
@@ -19,13 +19,11 @@ window.togglePin = function (pin) {
     alert('Connect to serial first!');
     return;
   }
-
   pinStates[pin] ^= 1;
   sendByte();
 };
 
 async function sendByte() {
   const byte = (pinStates[1] << 1) | pinStates[0];
-  const data = new Uint8Array([byte]);
-  await writer.write(data);
+  await writer.write(new Uint8Array([byte]));
 }
