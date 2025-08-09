@@ -32,6 +32,8 @@ p {
 
 /* Progress Bars */
 .progress-bar {
+  width: 300px;
+  height: 300px;
   position: absolute;
   top: 50%;
   left: 50%;
@@ -41,29 +43,38 @@ p {
 
 /* Inner Ring */
 .progress-bar.inner {
-  width: 300px;
-  height: 300px;
-  background: conic-gradient(#c61d32 100%, transparent 0);
-  mask: radial-gradient(closest-side, transparent 82%, black 83%);
-  -webkit-mask: radial-gradient(closest-side, transparent 82%, black 83%);
+  background: 
+    conic-gradient(#c61d32 100%, transparent 0), /* red progress arc */
+    radial-gradient(closest-side, #414042 86%, #763e43 86.2%);
+  mask: radial-gradient(closest-side, transparent 82%, black 82.2%);
+  -webkit-mask: radial-gradient(closest-side, transparent 82%, black 82.2%);
 }
 
 /* Middle Ring */
 .progress-bar.middle {
-  width: 300px;
-  height: 300px;
-  background: conic-gradient(#b71c2d 100%, transparent 0);
-  mask: radial-gradient(closest-side, transparent 88%, black 89%);
-  -webkit-mask: radial-gradient(closest-side, transparent 88%, black 89%);
+  background: conic-gradient(#b71c2d 100%, #414042 0);
+  mask: radial-gradient(closest-side, transparent 88%, black 88.2%);
+  -webkit-mask: radial-gradient(closest-side, transparent 88%, black 88.2%);
 }
 
 /* Outer Ring */
 .progress-bar.outer {
-  width: 300px;
-  height: 300px;
-  background: conic-gradient(#c61d32 100%, transparent 0);
-  mask: radial-gradient(closest-side, transparent 94%, black 95%);
-  -webkit-mask: radial-gradient(closest-side, transparent 94%, black 95%);
+  background: 
+    conic-gradient(#c61d32 100%, transparent 0), /* red progress arc */
+    radial-gradient(closest-side, #763e43 96%, #414042 96.2%);
+  mask: radial-gradient(closest-side, transparent 94%, black 94.2%);
+  -webkit-mask: radial-gradient(closest-side, transparent 94%, black 94.2%);
+}
+
+#border {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 237px;
+  height: 237px;
+  border-radius: 50%;
+  border: 36px solid #59595c; /* Outer border */
+  transform: translate(-50%, -50%);
 }
 
 /* SVG Tracks */

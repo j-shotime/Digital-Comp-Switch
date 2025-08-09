@@ -42,9 +42,9 @@ function setProgress(percent) {
   const text = document.getElementById('progress-text');
 
   // Update conic gradients
-  inner.style.background = `conic-gradient(#c61d32 ${percent}%, transparent 0)`;
-  middle.style.background = `conic-gradient(#b71c2d ${percent}%, transparent 0)`;
-  outer.style.background = `conic-gradient(#c61d32 ${percent}%, transparent 0)`;
+  inner.style.background = `conic-gradient(#c61d32 ${percent}%, transparent 0), radial-gradient(closest-side, #414042 86%, #763e43 86.2%)`;
+  middle.style.background = `conic-gradient(#b71c2d ${percent}%, #414042 0)`;
+  outer.style.background = `conic-gradient(#c61d32 ${percent}%, transparent 0), radial-gradient(closest-side, #763e43 96%, #414042 96.2%)`;
 }
 
 function formatTime(totalSeconds) {
