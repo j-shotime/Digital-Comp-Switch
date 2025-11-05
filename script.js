@@ -24,6 +24,8 @@ let currentStateUnsubscribe = null;
 // Web Serial pairing state
 let isPaired = false;
 let serialPort = null;
+// cache last mode (0=driver/red, 1=autonomous/blue) for Skills to preserve mode when disabling
+let skillsLastModeBit = 0;
 
 // play short start sound on user-initiated start/resume clicks
 function playStartSound() {
@@ -115,6 +117,34 @@ function initSerial() {
     setPaired(false);
   }
 }
+
+// Compose and send a byte compatible with the Switch tab protocol:
+// bit0 = enable (1=enabled), bit1 = mode (0=driver/red, 1=autonomous/blue)
+async function sendSwitchState(enableBit, modeBit) {
+  try {
+    if (!serialPort || !serialPort.writable) return;
+    const writer = serialPort.writable.getWriter();
+    const byte = ((modeBit & 1) << 1) | (enableBit & 1);
+    await writer.write(new Uint8Array([byte]));
+    writer.releaseLock();
+    // eslint-disable-next-line no-console
+    console.log('Sent switch byte:', byte);
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.warn('sendSwitchState failed', e);
+  }
+}
+
+function getSkillsModeBit() {
+  const skillsView = document.querySelector('.skills-view');
+  // blue theme -> autonomous
+  return (skillsView && skillsView.classList.contains('blue-theme')) ? 1 : 0;
+}
+
+// Expose shared serial helpers to other modules/pages (e.g., Switch tab)
+window.tryWebSerialPair = tryWebSerialPair;
+window.sendSwitchState = sendSwitchState;
+window.getSerialPort = () => serialPort;
 
 function updatePairingUI(pageIndex) {
   if (pageIndex == null) return;
@@ -361,6 +391,7 @@ export function navigate(pageIndex) {
           currentStateUnsubscribe = mod.onStateChange(running => {
             setNavDisabled(running, pageIndex);
             const completed = (typeof mod.isCompleted === 'function' && mod.isCompleted());
+            // Serial: for Skills only, but here is Match block so skip
             if (completed && !hasPlayedStopSound) { playStopSound(); hasPlayedStopSound = true; }
             if (!completed) { hasPlayedStopSound = false; }
             if (completed) {
@@ -529,6 +560,17 @@ export function navigate(pageIndex) {
             }
             if (completed && !hasPlayedStopSound) { playStopSound(); hasPlayedStopSound = true; }
             if (!completed) { hasPlayedStopSound = false; }
+            // Serial signaling for Skills timer based on theme
+            try {
+              if (running) {
+                // Timer started/resumed -> send enable with mode based on theme
+                skillsLastModeBit = getSkillsModeBit();
+                sendSwitchState(1, skillsLastModeBit);
+              } else {
+                // Timer paused/stopped/completed -> send disable (preserve last mode)
+                sendSwitchState(0, skillsLastModeBit);
+              }
+            } catch (e) { /* ignore serial errors */ }
             if (completed) {
               if (startButton) {
                 startButton.style.display = 'none';
