@@ -1,3 +1,235 @@
+.skills-view {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - 100px); /* Full viewport height */
+}
+
+.container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: transparent;
+}
+
+/* Centered Output Text */
+p {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-family: 'Noto Sans', sans-serif;
+  font-weight: normal;
+  font-size: 5rem;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  pointer-events: none; /* Optional: prevent clicks from interfering */
+}
+
+/* Progress Bars */
+.progress-bar {
+  width: 300px;
+  height: 300px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+}
+
+/* Rings should not block pointer events to controls */
+.progress-bar,
+#border,
+.track-svg {
+  pointer-events: none;
+}
+/* Inner Ring */
+.progress-bar.inner {
+  background: 
+    conic-gradient(#c61d32 100%, transparent 0), /* progress arc */
+    radial-gradient(closest-side, #414042 86%, #763e43 86.2%);
+  mask: radial-gradient(closest-side, transparent 82%, black 82.2%);
+  -webkit-mask: radial-gradient(closest-side, transparent 82%, black 82.2%);
+}
+
+/* Middle Ring */
+.progress-bar.middle {
+  background: conic-gradient(#b71c2d 100%, #414042 0);
+  mask: radial-gradient(closest-side, transparent 88%, black 88.2%);
+  -webkit-mask: radial-gradient(closest-side, transparent 88%, black 88.2%);
+}
+
+/* Outer Ring */
+.progress-bar.outer {
+  background: 
+    conic-gradient(#c61d32 100%, transparent 0), /* progress arc */
+    radial-gradient(closest-side, #763e43 96%, #414042 96.2%);
+  mask: radial-gradient(closest-side, transparent 94%, black 94.2%);
+  -webkit-mask: radial-gradient(closest-side, transparent 94%, black 94.2%);
+}
+
+#border {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 237px;
+  height: 237px;
+  border-radius: 50%;
+  border: 36px solid #59595c; /* Outer border */
+  transform: translate(-50%, -50%);
+}
+
+/* SVG Tracks */
+.track-svg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+
 h1 {
-  color: green;
+  position: absolute;
+  top: 15%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-weight: normal;
+  font-size: 8rem;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* Place controls centered below the circular timer */
+.controls {
+  position: absolute;
+  top: calc(50% + 170px); /* adjust to sit below the circle */
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Ensure controls are visually on top and clickable */
+.controls {
+  z-index: 9999 !important;
+  pointer-events: auto;
+}
+.controls button {
+  display: inline-block !important;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+}
+
+/* Hide Reset by default via a data attribute; JS will remove the attribute when Reset should appear */
+.controls[data-reset-hidden] #reset-button {
+  display: none !important;
+}
+
+/* When a timer is completed ensure Start/Pause is fully hidden via a class the JS sets */
+.controls.completed-no-start #start-button {
+  display: none !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
+/* When a timer is completed we hide the Start/Pause button entirely. */
+.controls .hidden-after-complete {
+  display: none !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
+/* DEBUG: visual aid to confirm controls area and detect overlays; remove when fixed */
+/* debug outline removed */
+
+/* Start button styling when inside .controls */
+.controls #start-button {
+  margin-top: 0;
+  position: static;
+  transform: none;
+  font-size: 1.2rem;
+  padding: 10px 20px;
+  background-color: #c61d32;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Make Reset visually match Start/Resume */
+.controls #reset-button {
+  margin-top: 0;
+  position: static;
+  transform: none;
+  font-size: 1.2rem;
+  padding: 10px 20px;
+  background-color: #c61d32;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Blue theme variant */
+/* Blue theme was removed for the progress rings. If you want a blue variant
+   in future, reintroduce the variables above and update the painter. */
+
+/* Ensure controls sit above the ring visuals */
+/* (controls z-index already set above to keep controls on top) */
+
+/* Simple toggle switch - red by default, blue when checked */
+.switch {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 10px;
+}
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.switch .slider {
+  position: relative;
+  width: 56px;
+  height: 30px;
+  background: #c61d32; /* red by default */
+  border-radius: 30px;
+  display: inline-block;
+  transition: background 0.2s ease;
+}
+.switch .slider:before {
+  content: "";
+  position: absolute;
+  height: 24px;
+  width: 24px;
+  left: 3px;
+  top: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+}
+.switch input:checked + .slider {
+  background: #1e90ff; /* blue when toggled */
+}
+.switch input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+/* Position the switch centered underneath the timer text */
+.timer-switch {
+  position: absolute;
+  /* shifted slightly lower so the switch sits comfortably below the timer text */
+  top: calc(50% + 70px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5; /* above rings */
 }

@@ -41,6 +41,13 @@ p {
   border-radius: 50%;
 }
 
+/* Rings should not block pointer events to controls */
+.progress-bar,
+#border,
+.track-svg {
+  pointer-events: none;
+}
+
 /* Inner Ring */
 .progress-bar.inner {
   background: 
@@ -101,13 +108,52 @@ h1 {
   pointer-events: none;
 }
 
-/* Optional: Style for the Start button */
-#start-button {
+/* Place controls centered below the circular timer */
+.controls {
   position: absolute;
-  top: 80%;
+  top: calc(50% + 170px); /* adjust to sit below the circle */
   left: 50%;
-  transform: translate(-50%, -50%);
-  margin-top: 20px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Ensure controls are visually on top and clickable */
+.controls {
+  z-index: 9999 !important;
+  pointer-events: auto;
+}
+.controls button {
+  display: inline-block !important;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+}
+
+/* Hide Reset by default via a data attribute; JS will remove the attribute when Reset should appear */
+.controls[data-reset-hidden] #reset-button {
+  display: none !important;
+}
+
+/* When a timer is completed ensure Start/Pause is fully hidden via a class the JS sets */
+.controls.completed-no-start #start-button {
+  display: none !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
+/* When a timer is completed we hide the Start/Pause button entirely. */
+.controls .hidden-after-complete {
+  display: none !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
+/* Start button styling when inside .controls */
+.controls #start-button {
+  margin-top: 0;
+  position: static;
+  transform: none;
   font-size: 1.2rem;
   padding: 10px 20px;
   background-color: #c61d32;
@@ -115,7 +161,18 @@ h1 {
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
+}
+
+/* Make Reset visually match Start/Resume */
+.controls #reset-button {
+  margin-top: 0;
+  position: static;
+  transform: none;
+  font-size: 1.2rem;
+  padding: 10px 20px;
+  background-color: #c61d32;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
 }

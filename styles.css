@@ -34,6 +34,44 @@ body {
   border-bottom: 2px solid #fff;
 }
 
+.bottom-nav button.disabled,
+.bottom-nav button[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  color: #ddd;
+  border-bottom: none !important; /* remove underline */
+  pointer-events: none; /* prevent hover/click events */
+}
+
+/* Ensure disabled buttons don't get focus underline or hover color */
+.bottom-nav button.disabled:hover,
+.bottom-nav button[aria-disabled="true"]:hover,
+.bottom-nav button.disabled:focus,
+.bottom-nav button[aria-disabled="true"]:focus {
+  color: #ddd;
+  border-bottom: none !important;
+  outline: none;
+}
+
 #content {
   padding: 20px;
 }
+
+/* Controls: place buttons inline and give spacing so Reset sits to the side */
+.controls {
+  display: inline-flex;
+  gap: 10px; /* space between buttons */
+  align-items: center;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.controls button {
+  padding: 8px 14px;
+  font-size: 16px;
+  border-radius: 4px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: #f2f2f2;
+  cursor: pointer;
+}
+

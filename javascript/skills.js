@@ -1,4 +1,5 @@
-let targetTime = 105; // seconds
+// Skills timer module (pause/resume, smooth progress)
+let targetTime = 60; // seconds
 let startTime = null; // timestamp in ms
 let timeOutput = null;
 let accumulatedMs = 0; // ms already elapsed when paused
@@ -11,7 +12,7 @@ function notifyState(running) {
   });
 }
 
-const tickMatch = (now) => {
+const tickSkills = (now) => {
   if (!startTime) startTime = now;
   if (!timeOutput) timeOutput = document.querySelector('#output');
 
@@ -19,16 +20,13 @@ const tickMatch = (now) => {
   const elapsedMs = accumulatedMs + (now - startTime);
   const remainingMs = Math.max(0, targetMs - elapsedMs);
 
-  // update displayed time (in seconds)
   const remainingSeconds = Math.ceil(remainingMs / 1000);
   if (timeOutput) timeOutput.textContent = formatTime(remainingSeconds);
 
-  // smooth progress: percent remaining (100 -> 0)
   const percent = (remainingMs / targetMs) * 100;
-  setProgressMatch(percent);
+  setProgressSkills(percent);
 
   if (remainingMs <= 0) {
-    // complete
     accumulatedMs = targetMs;
     startTime = null;
     rafId = null;
@@ -36,52 +34,52 @@ const tickMatch = (now) => {
     return;
   }
 
-  rafId = requestAnimationFrame(tickMatch);
+  rafId = requestAnimationFrame(tickSkills);
 };
 
-export function toggleMatch() {
+export function toggleSkills() {
   if (isRunning()) {
-    // pause: accumulate elapsed ms
     const now = performance.now();
     accumulatedMs += now - startTime;
     startTime = null;
-    // cancel animation frame so tick doesn't restart
     if (rafId) {
       cancelAnimationFrame(rafId);
       rafId = null;
     }
-    // notify paused (not running) so nav re-enables
     notifyState(false);
   } else {
-    // resume or start
-    startMatch();
+    startSkills();
   }
 }
 
-function startMatch() {
+function startSkills() {
   startTime = performance.now();
-  // if starting fresh, ensure accumulated is 0
   if (accumulatedMs >= targetTime * 1000) accumulatedMs = 0;
   notifyState(true);
-  rafId = requestAnimationFrame(tickMatch);
+  rafId = requestAnimationFrame(tickSkills);
 }
 
-export function prepMatch() {
-  targetTime = 105; // seconds
+export function prepSkills() {
+  targetTime = 60; // seconds
   timeOutput = document.querySelector('#output');
   if (timeOutput) timeOutput.textContent = formatTime(targetTime);
-  // set progress to full
-  setProgressMatch(100);
+  setProgressSkills(100);
   startTime = null;
   accumulatedMs = 0;
+  // Wire color switch: toggle .blue-theme on the skills view and repaint
+  // Previously we allowed the color switch to change a blue-theme which
+  // affected progress colors. That behavior has been reverted: the
+  // progress painter now uses fixed colors. Keep the switch present in the
+  // DOM for UI parity but do not wire it to change progress colors.
+  // eslint-disable-next-line no-console
+  console.log('prepSkills: initialized (color switch no longer repaints progress)');
 }
 
 export function reset() {
   accumulatedMs = 0;
   startTime = null;
   if (timeOutput) timeOutput.textContent = formatTime(targetTime);
-  setProgressMatch(100);
-  // ensure listeners know timer inactive
+  setProgressSkills(100);
   notifyState(false);
   if (rafId) {
     cancelAnimationFrame(rafId);
@@ -93,8 +91,12 @@ export function isRunning() {
   return startTime !== null;
 }
 
+export function onStateChange(cb) {
+  _listeners.add(cb);
+  return () => _listeners.delete(cb);
+}
+
 export function isActive() {
-  // active means running or paused but not completed
   const targetMs = targetTime * 1000;
   return (startTime !== null) || (accumulatedMs > 0 && accumulatedMs < targetMs);
 }
@@ -104,19 +106,20 @@ export function isCompleted() {
   return accumulatedMs >= targetMs;
 }
 
-export function onStateChange(cb) {
-  _listeners.add(cb);
-  return () => _listeners.delete(cb);
-}
-
-function setProgressMatch(percent) {
+function setProgressSkills(percent) {
   percent = Math.max(0, Math.min(100, percent)); // Clamp 0-100
   const inner = document.getElementById('inner-ring');
   const middle = document.getElementById('middle-ring');
   const outer = document.getElementById('outer-ring');
-  if (inner) inner.style.background = `conic-gradient(#c61d32 ${percent}%, transparent 0), radial-gradient(closest-side, #414042 86%, #763e43 86.2%)`;
-  if (middle) middle.style.background = `conic-gradient(#b71c2d ${percent}%, #414042 0)`;
-  if (outer) outer.style.background = `conic-gradient(#c61d32 ${percent}%, transparent 0), radial-gradient(closest-side, #763e43 96%, #414042 96.2%)`;
+  // Use fixed palette for progress rings (pre-palette implementation)
+  const primary = '#c61d32';
+  const middleColor = '#b71c2d';
+  const ringAccent = '#763e43';
+  const ringEdge = '#414042';
+  // Update conic gradients if elements exist using fixed colors
+  if (inner) inner.style.background = `conic-gradient(${primary} ${percent}%, transparent 0), radial-gradient(closest-side, ${ringEdge} 86%, ${ringAccent} 86.2%)`;
+  if (middle) middle.style.background = `conic-gradient(${middleColor} ${percent}%, ${ringEdge} 0)`;
+  if (outer) outer.style.background = `conic-gradient(${primary} ${percent}%, transparent 0), radial-gradient(closest-side, ${ringAccent} 96%, ${ringEdge} 96.2%)`;
 }
 
 function formatTime(totalSeconds) {
@@ -124,3 +127,4 @@ function formatTime(totalSeconds) {
   const seconds = totalSeconds % 60;
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
+
