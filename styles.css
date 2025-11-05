@@ -7,6 +7,20 @@ body {
   text-align: center;
 }
 
+/* Disable text selection and dragging across the app to prevent copying/pasting */
+html, body, #content,
+.skills-view, .match-view, .switch-view, .custom-view, .calculator-view,
+.bottom-nav, .controls, .container,
+p, h1, button, label, .switch, .slider {
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none; /* disable callout on iOS */
+}
+img, svg, canvas {
+  -webkit-user-drag: none;
+}
+
 .bottom-nav {
   position: fixed;
   bottom: 0;

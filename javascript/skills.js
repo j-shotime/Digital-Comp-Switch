@@ -66,13 +66,28 @@ export function prepSkills() {
   setProgressSkills(100);
   startTime = null;
   accumulatedMs = 0;
-  // Wire color switch: toggle .blue-theme on the skills view and repaint
-  // Previously we allowed the color switch to change a blue-theme which
-  // affected progress colors. That behavior has been reverted: the
-  // progress painter now uses fixed colors. Keep the switch present in the
-  // DOM for UI parity but do not wire it to change progress colors.
-  // eslint-disable-next-line no-console
-  console.log('prepSkills: initialized (color switch no longer repaints progress)');
+  // Wire color switch: toggle .blue-theme and repaint to trigger CSS transitions
+  const switchEl = document.getElementById('color-switch');
+  const skillsView = document.querySelector('.skills-view');
+  function currentPercent() {
+    const targetMs = targetTime * 1000;
+    let elapsed = accumulatedMs;
+    if (startTime) elapsed += (performance.now() - startTime);
+    const remainingMs = Math.max(0, targetMs - elapsed);
+    return (remainingMs / targetMs) * 100;
+  }
+  function applyTheme(checked) {
+    if (!skillsView) return;
+    if (checked) skillsView.classList.add('blue-theme'); else skillsView.classList.remove('blue-theme');
+    // Repaint rings with current percent so CSS background transitions animate
+    setProgressSkills(currentPercent());
+  }
+  if (switchEl) {
+    applyTheme(switchEl.checked);
+    switchEl.addEventListener('change', (e) => {
+      try { applyTheme(e.target.checked); } catch (err) { /* ignore */ }
+    });
+  }
 }
 
 export function reset() {
@@ -111,15 +126,22 @@ function setProgressSkills(percent) {
   const inner = document.getElementById('inner-ring');
   const middle = document.getElementById('middle-ring');
   const outer = document.getElementById('outer-ring');
-  // Use fixed palette for progress rings (pre-palette implementation)
-  const primary = '#c61d32';
-  const middleColor = '#b71c2d';
-  const ringAccent = '#763e43';
-  const ringEdge = '#414042';
-  // Update conic gradients if elements exist using fixed colors
-  if (inner) inner.style.background = `conic-gradient(${primary} ${percent}%, transparent 0), radial-gradient(closest-side, ${ringEdge} 86%, ${ringAccent} 86.2%)`;
-  if (middle) middle.style.background = `conic-gradient(${middleColor} ${percent}%, ${ringEdge} 0)`;
-  if (outer) outer.style.background = `conic-gradient(${primary} ${percent}%, transparent 0), radial-gradient(closest-side, ${ringAccent} 96%, ${ringEdge} 96.2%)`;
+  try {
+    const p = `${percent}%`;
+    if (inner) inner.style.setProperty('--p', p);
+    if (middle) middle.style.setProperty('--p', p);
+    if (outer) outer.style.setProperty('--p', p);
+  } catch (e) {
+    // Fallback inline painter if CSS vars unsupported
+    const isBlue = !!document.querySelector('.skills-view.blue-theme');
+    const primary = isBlue ? '#1e90ff' : '#c61d32';
+    const middleColor = isBlue ? '#1777d6' : '#b71c2d';
+    const ringAccent = isBlue ? '#125fa8' : '#763e43';
+    const ringEdge = '#414042';
+    if (inner) inner.style.background = `conic-gradient(${primary} ${percent}%, transparent 0), radial-gradient(closest-side, ${ringEdge} 86%, ${ringAccent} 86.2%)`;
+    if (middle) middle.style.background = `conic-gradient(${middleColor} ${percent}%, ${ringEdge} 0)`;
+    if (outer) outer.style.background = `conic-gradient(${primary} ${percent}%, transparent 0), radial-gradient(closest-side, ${ringAccent} 96%, ${ringEdge} 96.2%)`;
+  }
 }
 
 function formatTime(totalSeconds) {
