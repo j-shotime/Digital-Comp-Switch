@@ -21,6 +21,119 @@ const loadedStyles = new Map();
 const moduleCache = new Map();
 let currentPageIndex = null;
 let currentStateUnsubscribe = null;
+// Web Serial pairing state
+let isPaired = false;
+let serialPort = null;
+
+// play short start sound on user-initiated start/resume clicks
+function playStartSound() {
+  try {
+    const audio = new Audio('audio/start.wav');
+    audio.currentTime = 0;
+    // Fire and forget; browsers allow this on user gesture
+    audio.play().catch(() => { /* ignore autoplay/other play issues */ });
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.warn('start sound failed', e);
+  }
+}
+
+// play short pause sound on user-initiated pause clicks
+function playPauseSound() {
+  try {
+    const audio = new Audio('audio/pause.wav');
+    audio.currentTime = 0;
+    audio.play().catch(() => { /* ignore autoplay/other play issues */ });
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.warn('pause sound failed', e);
+  }
+}
+
+function setPaired(val) {
+  isPaired = !!val;
+  updatePairingUI(currentPageIndex);
+}
+
+async function tryWebSerialPair() {
+  if (!('serial' in navigator)) {
+    alert('Web Serial is not supported in this browser. Use Chrome/Edge on localhost/https.');
+    return;
+  }
+  try {
+    const port = await navigator.serial.requestPort({});
+    await port.open({ baudRate: 9600 });
+    serialPort = port;
+    setPaired(true);
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.warn('Pair canceled or failed', e);
+    setPaired(false);
+  }
+}
+
+function initSerial() {
+  if (!('serial' in navigator)) { setPaired(false); return; }
+  try {
+    navigator.serial.addEventListener('disconnect', async () => {
+      try { if (serialPort) await serialPort.close(); } catch {}
+      serialPort = null;
+      setPaired(false);
+    });
+    navigator.serial.addEventListener('connect', () => {
+      // Device connected; we still consider paired only after open
+    });
+    navigator.serial.getPorts().then(async ports => {
+      if (ports && ports.length) {
+        try {
+          const port = ports[0];
+          if (!port.readable) await port.open({ baudRate: 9600 });
+          serialPort = port;
+          setPaired(true);
+        } catch (e) {
+          // eslint-disable-next-line no-console
+          console.warn('Auto-open serial failed', e);
+          setPaired(false);
+        }
+      } else {
+        setPaired(false);
+      }
+    });
+  } catch (e) {
+    setPaired(false);
+  }
+}
+
+function updatePairingUI(pageIndex) {
+  if (pageIndex == null) return;
+  const scope = (pageIndex === 1) ? document.querySelector('.skills-view')
+              : (pageIndex === 2) ? document.querySelector('.match-view')
+              : null;
+  if (!scope) return;
+  const output = scope.querySelector('#output');
+  const pairBtn = scope.querySelector('#pair-button');
+  const startBtn = scope.querySelector('#start-button');
+  if (pairBtn) {
+    pairBtn.style.display = isPaired ? 'none' : 'inline-block';
+    // ensure click wires to Web Serial pairing when visible
+    pairBtn.onclick = () => tryWebSerialPair();
+  }
+  if (output) output.style.display = isPaired ? 'block' : 'none';
+  // Disable Start/Resume when not paired to prevent running without a device
+  if (startBtn) {
+    if (isPaired) {
+      startBtn.disabled = false;
+      startBtn.style.pointerEvents = 'auto';
+      startBtn.removeAttribute('aria-disabled');
+      startBtn.title = '';
+    } else {
+      startBtn.disabled = true;
+      startBtn.style.pointerEvents = 'none';
+      startBtn.setAttribute('aria-disabled', 'true');
+      startBtn.title = 'Pair a device to start';
+    }
+  }
+}
 
 function setNavDisabled(disabled, ownerPageIndex) {
   const buttons = document.querySelectorAll('.bottom-nav button');
@@ -177,6 +290,9 @@ export function navigate(pageIndex) {
     // track current page
     currentPageIndex = pageIndex;
 
+  // Apply pairing UI state to the freshly injected view
+  updatePairingUI(pageIndex);
+
     if (pageIndex === 2) {
       // dynamically import match module and initialize
       import('./javascript/match.js').then(mod => {
@@ -193,13 +309,23 @@ export function navigate(pageIndex) {
             }
           } catch (e) { /* ignore */ }
         }, 120);
-        const startButton = document.getElementById('start-button');
+  const startButton = document.getElementById('start-button');
   const resetButton = document.getElementById('reset-button');
   const matchControlsEl = document.querySelector('.match-view .controls');
   if (matchControlsEl) matchControlsEl.setAttribute('data-reset-hidden', 'true');
+  // Also wire Pair button
+  const pairBtn = document.getElementById('pair-button');
+  if (pairBtn) pairBtn.onclick = () => tryWebSerialPair();
 
         if (startButton) {
-          startButton.onclick = () => { if (typeof mod.toggleMatch === 'function') mod.toggleMatch(); };
+          startButton.onclick = () => {
+            const label = (startButton.textContent || '').toLowerCase();
+            const isStarting = label.includes('start') || label.includes('resume');
+            const isPausing = label.includes('pause');
+            if (isStarting) playStartSound();
+            else if (isPausing) playPauseSound();
+            if (typeof mod.toggleMatch === 'function') mod.toggleMatch();
+          };
           startButton.style.display = 'inline-block';
           startButton.textContent = (typeof mod.isRunning === 'function' && mod.isRunning()) ? 'Pause' : 'Start';
         }
@@ -329,6 +455,9 @@ export function navigate(pageIndex) {
           controlsEl.style.pointerEvents = 'auto';
           controlsEl.setAttribute('data-reset-hidden', 'true');
         }
+  // Also wire Pair button
+  const pairBtn = document.getElementById('pair-button');
+  if (pairBtn) pairBtn.onclick = () => tryWebSerialPair();
         if (startButton) {
           // safer wiring: log clicks and call module function if present
           startButton.addEventListener('click', (e) => {
@@ -337,6 +466,11 @@ export function navigate(pageIndex) {
             // ensure button isn't disabled
             startButton.disabled = false;
             startButton.style.pointerEvents = 'auto';
+            const label = (startButton.textContent || '').toLowerCase();
+            const isStarting = label.includes('start') || label.includes('resume');
+            const isPausing = label.includes('pause');
+            if (isStarting) playStartSound();
+            else if (isPausing) playPauseSound();
             if (typeof mod.toggleSkills === 'function') {
               try { mod.toggleSkills(); } catch (err) { console.error('toggleSkills failed', err); }
             } else {
@@ -452,7 +586,7 @@ export function navigate(pageIndex) {
 }
 
 // Initial load
-window.addEventListener('DOMContentLoaded', () => navigate(3));
+window.addEventListener('DOMContentLoaded', () => { initSerial(); navigate(3); });
 window.navigate = navigate;
 // debug: confirm loader module is running
 // eslint-disable-next-line no-console
