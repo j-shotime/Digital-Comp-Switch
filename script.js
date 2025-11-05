@@ -50,6 +50,18 @@ function playPauseSound() {
   }
 }
 
+// play stop sound when a timer completes
+function playStopSound() {
+  try {
+    const audio = new Audio('audio/stop.wav');
+    audio.currentTime = 0;
+    audio.play().catch(() => { /* ignore autoplay/other play issues */ });
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.warn('stop sound failed', e);
+  }
+}
+
 function setPaired(val) {
   isPaired = !!val;
   updatePairingUI(currentPageIndex);
@@ -343,10 +355,14 @@ export function navigate(pageIndex) {
 
         // Subscribe to running state
         if (typeof mod.onStateChange === 'function') {
+          // Track whether we've already played the stop sound for this session
+          let hasPlayedStopSound = (typeof mod.isCompleted === 'function' && mod.isCompleted());
           if (currentStateUnsubscribe) currentStateUnsubscribe();
           currentStateUnsubscribe = mod.onStateChange(running => {
             setNavDisabled(running, pageIndex);
             const completed = (typeof mod.isCompleted === 'function' && mod.isCompleted());
+            if (completed && !hasPlayedStopSound) { playStopSound(); hasPlayedStopSound = true; }
+            if (!completed) { hasPlayedStopSound = false; }
             if (completed) {
               if (startButton) {
                 startButton.style.display = 'none';
@@ -498,6 +514,8 @@ export function navigate(pageIndex) {
         }
         // Subscribe to running state
         if (typeof mod.onStateChange === 'function') {
+          // Track stop sound so it's only played once per completion
+          let hasPlayedStopSound = (typeof mod.isCompleted === 'function' && mod.isCompleted());
           if (currentStateUnsubscribe) currentStateUnsubscribe();
           currentStateUnsubscribe = mod.onStateChange(running => {
             setNavDisabled(running, pageIndex);
@@ -509,6 +527,8 @@ export function navigate(pageIndex) {
               colorSwitch.disabled = !basic;
               if (basic) colorSwitch.removeAttribute('aria-disabled'); else colorSwitch.setAttribute('aria-disabled', 'true');
             }
+            if (completed && !hasPlayedStopSound) { playStopSound(); hasPlayedStopSound = true; }
+            if (!completed) { hasPlayedStopSound = false; }
             if (completed) {
               if (startButton) {
                 startButton.style.display = 'none';

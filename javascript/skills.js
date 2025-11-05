@@ -5,6 +5,7 @@ let timeOutput = null;
 let accumulatedMs = 0; // ms already elapsed when paused
 const _listeners = new Set();
 let rafId = null;
+let warningPlayed = false; // play 15s warning once per run
 
 function notifyState(running) {
   _listeners.forEach(cb => {
@@ -25,6 +26,16 @@ const tickSkills = (now) => {
 
   const percent = (remainingMs / targetMs) * 100;
   setProgressSkills(percent);
+
+  // Play warning at 15 seconds remaining once per run
+  if (!warningPlayed && remainingMs > 0 && remainingMs <= 15000) {
+    try {
+      const audio = new Audio('audio/warning.wav');
+      audio.currentTime = 0;
+      audio.play().catch(() => { /* ignore autoplay/other play issues */ });
+    } catch (e) { /* ignore */ }
+    warningPlayed = true;
+  }
 
   if (remainingMs <= 0) {
     accumulatedMs = targetMs;
@@ -55,6 +66,8 @@ export function toggleSkills() {
 function startSkills() {
   startTime = performance.now();
   if (accumulatedMs >= targetTime * 1000) accumulatedMs = 0;
+  // If this is a fresh start, reset warning flag
+  if (accumulatedMs === 0) warningPlayed = false;
   notifyState(true);
   rafId = requestAnimationFrame(tickSkills);
 }
@@ -66,6 +79,7 @@ export function prepSkills() {
   setProgressSkills(100);
   startTime = null;
   accumulatedMs = 0;
+  warningPlayed = false;
   // Wire color switch: toggle .blue-theme and repaint to trigger CSS transitions
   const switchEl = document.getElementById('color-switch');
   const skillsView = document.querySelector('.skills-view');
@@ -93,6 +107,7 @@ export function prepSkills() {
 export function reset() {
   accumulatedMs = 0;
   startTime = null;
+  warningPlayed = false;
   if (timeOutput) timeOutput.textContent = formatTime(targetTime);
   setProgressSkills(100);
   notifyState(false);
