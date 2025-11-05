@@ -209,10 +209,13 @@ h1 {
 .switch .slider:before {
   content: "";
   position: absolute;
-  height: 24px;
-  width: 24px;
-  left: 3px;
-  top: 3px;
+  /* slightly smaller knob so it appears more inset from the slider rail */
+  /* nudged up slightly in size per user request */
+  height: 22px;
+  width: 22px;
+  /* reduce inset so the knob is closer to the rail edges */
+  left: 4px;
+  top: 4px;
   background: #fff;
   border-radius: 50%;
   transition: transform 0.2s ease;
@@ -227,8 +230,8 @@ h1 {
 /* Position the switch centered underneath the timer text */
 .timer-switch {
   position: absolute;
-  /* shifted slightly lower so the switch sits comfortably below the timer text */
-  top: calc(50% + 70px);
+  /* slightly higher now so the switch sits a bit closer to the timer text */
+  top: calc(50% + 60px);
   left: 50%;
   transform: translateX(-50%);
   z-index: 5; /* above rings */
