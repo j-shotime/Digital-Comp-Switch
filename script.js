@@ -141,6 +141,10 @@ function getSkillsModeBit() {
   return (skillsView && skillsView.classList.contains('blue-theme')) ? 1 : 0;
 }
 
+function isPairedNow() {
+  try { return !!(serialPort && serialPort.writable); } catch { return isPaired; }
+}
+
 // Expose shared serial helpers to other modules/pages (e.g., Switch tab)
 window.tryWebSerialPair = tryWebSerialPair;
 window.sendSwitchState = sendSwitchState;
@@ -155,15 +159,16 @@ function updatePairingUI(pageIndex) {
   const output = scope.querySelector('#output');
   const pairBtn = scope.querySelector('#pair-button');
   const startBtn = scope.querySelector('#start-button');
+  const pairedNow = isPairedNow();
   if (pairBtn) {
-    pairBtn.style.display = isPaired ? 'none' : 'inline-block';
+    pairBtn.style.display = pairedNow ? 'none' : 'inline-block';
     // ensure click wires to Web Serial pairing when visible
     pairBtn.onclick = () => tryWebSerialPair();
   }
-  if (output) output.style.display = isPaired ? 'block' : 'none';
+  if (output) output.style.display = pairedNow ? 'block' : 'none';
   // Disable Start/Resume when not paired to prevent running without a device
   if (startBtn) {
-    if (isPaired) {
+    if (pairedNow) {
       startBtn.disabled = false;
       startBtn.style.pointerEvents = 'auto';
       startBtn.removeAttribute('aria-disabled');
@@ -361,6 +366,9 @@ export function navigate(pageIndex) {
 
         if (startButton) {
           startButton.onclick = () => {
+            // defensively enable in case prior state left it disabled
+            startButton.disabled = false;
+            startButton.style.pointerEvents = 'auto';
             const label = (startButton.textContent || '').toLowerCase();
             const isStarting = label.includes('start') || label.includes('resume');
             const isPausing = label.includes('pause');
@@ -378,8 +386,16 @@ export function navigate(pageIndex) {
             if (startButton) {
               startButton.style.display = 'inline-block';
               startButton.textContent = 'Start';
+              // Re-enable based on pairing state after reset
+              const pairedNow = isPairedNow();
+              startButton.disabled = !pairedNow;
+              startButton.style.pointerEvents = pairedNow ? 'auto' : 'none';
             }
             resetButton.style.display = 'none';
+            const ctrl = document.querySelector('.match-view .controls');
+            if (ctrl) ctrl.classList.remove('completed-no-start');
+            // Re-apply pairing UI to ensure Start state matches pairing
+            updatePairingUI(pageIndex);
           };
         }
 
@@ -410,6 +426,8 @@ export function navigate(pageIndex) {
               if (startButton) {
                 startButton.style.display = 'inline-block';
                 startButton.textContent = 'Pause';
+                startButton.disabled = false; // running -> start shows as Pause; ensure enabled
+                startButton.style.pointerEvents = 'auto';
                 if (matchControlsEl) matchControlsEl.classList.remove('completed-no-start');
               }
               // while running, hide Reset
@@ -420,7 +438,12 @@ export function navigate(pageIndex) {
             } else {
               if (startButton) {
                 startButton.style.display = 'inline-block';
-                startButton.textContent = 'Resume';
+                const active = (typeof mod.isActive === 'function' && mod.isActive());
+                startButton.textContent = active ? 'Resume' : 'Start';
+                // paused & not completed: enable based on pairing
+                const pairedNow = isPairedNow();
+                startButton.disabled = !pairedNow;
+                startButton.style.pointerEvents = pairedNow ? 'auto' : 'none';
                 if (matchControlsEl) matchControlsEl.classList.remove('completed-no-start');
               }
               // paused: show Reset if the timer is active (was started)
@@ -432,6 +455,8 @@ export function navigate(pageIndex) {
                 }
               }
             }
+            // enforce pairing gating on Start each state change
+            updatePairingUI(pageIndex);
           });
 
           // apply initial state
@@ -539,8 +564,15 @@ export function navigate(pageIndex) {
             if (startButton) {
               startButton.style.display = 'inline-block';
               startButton.textContent = 'Start';
+              // Re-enable based on pairing state after reset
+              const pairedNow = isPairedNow();
+              startButton.disabled = !pairedNow;
+              startButton.style.pointerEvents = pairedNow ? 'auto' : 'none';
             }
             resetButton.style.display = 'none';
+            if (controlsEl) controlsEl.classList.remove('completed-no-start');
+            // Re-apply pairing UI to ensure Start state matches pairing
+            updatePairingUI(pageIndex);
           });
         }
         // Subscribe to running state
@@ -587,6 +619,8 @@ export function navigate(pageIndex) {
               if (startButton) {
                 startButton.style.display = 'inline-block';
                 startButton.textContent = 'Pause';
+                startButton.disabled = false; // running -> Pause
+                startButton.style.pointerEvents = 'auto';
                 if (controlsEl) controlsEl.classList.remove('completed-no-start');
               }
               // while running, hide Reset
@@ -597,7 +631,12 @@ export function navigate(pageIndex) {
             } else {
               if (startButton) {
                 startButton.style.display = 'inline-block';
-                startButton.textContent = 'Resume';
+                const active = (typeof mod.isActive === 'function' && mod.isActive());
+                startButton.textContent = active ? 'Resume' : 'Start';
+                // paused & not completed: enable based on pairing
+                const pairedNow = isPairedNow();
+                startButton.disabled = !pairedNow;
+                startButton.style.pointerEvents = pairedNow ? 'auto' : 'none';
                 if (controlsEl) controlsEl.classList.remove('completed-no-start');
               }
               // paused: show Reset if the timer is active (was started)
@@ -609,6 +648,8 @@ export function navigate(pageIndex) {
                 }
               }
             }
+            // enforce pairing gating on Start each state change
+            updatePairingUI(pageIndex);
           });
           const running = (typeof mod.isRunning === 'function' && mod.isRunning());
           const completed = (typeof mod.isCompleted === 'function' && mod.isCompleted());
