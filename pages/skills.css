@@ -49,27 +49,33 @@ p {
 }
 /* Inner Ring */
 .progress-bar.inner {
-  background: 
-    conic-gradient(#c61d32 100%, transparent 0), /* progress arc */
-    radial-gradient(closest-side, #414042 86%, #763e43 86.2%);
+  --p: 100%;
+  background:
+    conic-gradient(var(--primary, #c61d32) var(--p), transparent 0),
+    radial-gradient(closest-side, var(--ring-edge, #414042) 86%, var(--ring-accent, #763e43) 86.2%);
   mask: radial-gradient(closest-side, transparent 82%, black 82.2%);
   -webkit-mask: radial-gradient(closest-side, transparent 82%, black 82.2%);
+  transition: background 0.2s ease;
 }
 
 /* Middle Ring */
 .progress-bar.middle {
-  background: conic-gradient(#b71c2d 100%, #414042 0);
+  --p: 100%;
+  background: conic-gradient(var(--middle-color, #b71c2d) var(--p), var(--ring-edge, #414042) 0);
   mask: radial-gradient(closest-side, transparent 88%, black 88.2%);
   -webkit-mask: radial-gradient(closest-side, transparent 88%, black 88.2%);
+  transition: background 0.2s ease;
 }
 
 /* Outer Ring */
 .progress-bar.outer {
-  background: 
-    conic-gradient(#c61d32 100%, transparent 0), /* progress arc */
-    radial-gradient(closest-side, #763e43 96%, #414042 96.2%);
+  --p: 100%;
+  background:
+    conic-gradient(var(--primary, #c61d32) var(--p), transparent 0),
+    radial-gradient(closest-side, var(--ring-accent, #763e43) 96%, var(--ring-edge, #414042) 96.2%);
   mask: radial-gradient(closest-side, transparent 94%, black 94.2%);
   -webkit-mask: radial-gradient(closest-side, transparent 94%, black 94.2%);
+  transition: background 0.2s ease;
 }
 
 #border {
@@ -107,6 +113,28 @@ h1 {
   pointer-events: none;
 }
 
+/* Pair button, centered like the time text */
+.pair-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  /* Nudge slightly up and left to visually align with the ring center */
+  transform: translate(calc(-50% - 6px), calc(-50% - 6px));
+  z-index: 6;
+  display: inline-block;
+  white-space: nowrap;
+  text-align: center;
+  pointer-events: auto;
+  font-size: 1.2rem;
+  padding: 10px 20px;
+  background-color: var(--primary, #c61d32);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
 /* Place controls centered below the circular timer */
 .controls {
   position: absolute;
@@ -127,6 +155,12 @@ h1 {
 .controls button {
   display: inline-block !important;
   box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+}
+
+/* Visual cue when buttons are disabled (e.g., when not paired) */
+.controls button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* Hide Reset by default via a data attribute; JS will remove the attribute when Reset should appear */
@@ -163,6 +197,7 @@ h1 {
   border: none;
   border-radius: 8px;
   cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
 /* Make Reset visually match Start/Resume */
@@ -177,11 +212,29 @@ h1 {
   border: none;
   border-radius: 8px;
   cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
-/* Blue theme variant */
-/* Blue theme was removed for the progress rings. If you want a blue variant
-   in future, reintroduce the variables above and update the painter. */
+/* Default palette (red) */
+.skills-view {
+  --primary: #c61d32;
+  --middle-color: #b71c2d;
+  --ring-accent: #763e43;
+  --ring-edge: #414042;
+}
+
+/* Blue theme palette and button color */
+.skills-view.blue-theme {
+  --primary: #1e90ff;
+  --middle-color: #1777d6;
+  --ring-accent: #125fa8;
+  --ring-edge: #2b3850;
+}
+
+.skills-view.blue-theme .controls #start-button,
+.skills-view.blue-theme .controls #reset-button {
+  background-color: #1e90ff !important;
+}
 
 /* Ensure controls sit above the ring visuals */
 /* (controls z-index already set above to keep controls on top) */

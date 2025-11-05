@@ -4,6 +4,7 @@ let timeOutput = null;
 let accumulatedMs = 0; // ms already elapsed when paused
 const _listeners = new Set();
 let rafId = null;
+let warningPlayed = false; // ensure 15s warning plays once per run
 
 function notifyState(running) {
   _listeners.forEach(cb => {
@@ -26,6 +27,16 @@ const tickMatch = (now) => {
   // smooth progress: percent remaining (100 -> 0)
   const percent = (remainingMs / targetMs) * 100;
   setProgressMatch(percent);
+
+  // Play warning at 15 seconds remaining once per run
+  if (!warningPlayed && remainingMs > 0 && remainingMs <= 15000) {
+    try {
+      const audio = new Audio('audio/warning.wav');
+      audio.currentTime = 0;
+      audio.play().catch(() => { /* ignore autoplay/other play issues */ });
+    } catch (e) { /* ignore */ }
+    warningPlayed = true;
+  }
 
   if (remainingMs <= 0) {
     // complete
@@ -62,6 +73,8 @@ function startMatch() {
   startTime = performance.now();
   // if starting fresh, ensure accumulated is 0
   if (accumulatedMs >= targetTime * 1000) accumulatedMs = 0;
+  // Reset warning flag on fresh start
+  if (accumulatedMs === 0) warningPlayed = false;
   notifyState(true);
   rafId = requestAnimationFrame(tickMatch);
 }
@@ -74,11 +87,13 @@ export function prepMatch() {
   setProgressMatch(100);
   startTime = null;
   accumulatedMs = 0;
+  warningPlayed = false;
 }
 
 export function reset() {
   accumulatedMs = 0;
   startTime = null;
+  warningPlayed = false;
   if (timeOutput) timeOutput.textContent = formatTime(targetTime);
   setProgressMatch(100);
   // ensure listeners know timer inactive
