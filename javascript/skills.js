@@ -6,6 +6,9 @@ let accumulatedMs = 0; // ms already elapsed when paused
 const _listeners = new Set();
 let rafId = null;
 let warningPlayed = false; // play 15s warning once per run
+let fallbackIntervalId = null; // background fallback so timers progress when tab not visible
+let warnTimeoutId = null; // precise scheduled warning
+let endTimeoutId = null;  // precise scheduled completion tick
 
 function notifyState(running) {
   _listeners.forEach(cb => {
@@ -29,11 +32,7 @@ const tickSkills = (now) => {
 
   // Play warning at 15 seconds remaining once per run
   if (!warningPlayed && remainingMs > 0 && remainingMs <= 15000) {
-    try {
-      const audio = new Audio('audio/warning.wav');
-      audio.currentTime = 0;
-      audio.play().catch(() => { /* ignore autoplay/other play issues */ });
-    } catch (e) { /* ignore */ }
+    try { window.playWarningSound ? window.playWarningSound() : null; } catch (e) { /* ignore */ }
     warningPlayed = true;
   }
 
@@ -41,6 +40,9 @@ const tickSkills = (now) => {
     accumulatedMs = targetMs;
     startTime = null;
     rafId = null;
+    if (fallbackIntervalId) { clearInterval(fallbackIntervalId); fallbackIntervalId = null; }
+    if (warnTimeoutId) { clearTimeout(warnTimeoutId); warnTimeoutId = null; }
+    if (endTimeoutId) { clearTimeout(endTimeoutId); endTimeoutId = null; }
     notifyState(false);
     return;
   }
@@ -70,6 +72,8 @@ function startSkills() {
   if (accumulatedMs === 0) warningPlayed = false;
   notifyState(true);
   rafId = requestAnimationFrame(tickSkills);
+  schedulePreciseTimers();
+  ensureFallbackTimer();
 }
 
 export function prepSkills() {
@@ -115,6 +119,12 @@ export function reset() {
     cancelAnimationFrame(rafId);
     rafId = null;
   }
+  if (fallbackIntervalId) {
+    clearInterval(fallbackIntervalId);
+    fallbackIntervalId = null;
+  }
+  if (warnTimeoutId) { clearTimeout(warnTimeoutId); warnTimeoutId = null; }
+  if (endTimeoutId) { clearTimeout(endTimeoutId); endTimeoutId = null; }
 }
 
 export function isRunning() {
@@ -164,4 +174,46 @@ function formatTime(totalSeconds) {
   const seconds = totalSeconds % 60;
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
+
+function schedulePreciseTimers() {
+  // Clear any existing timers
+  if (warnTimeoutId) { clearTimeout(warnTimeoutId); warnTimeoutId = null; }
+  if (endTimeoutId) { clearTimeout(endTimeoutId); endTimeoutId = null; }
+  if (!isRunning()) return;
+  const targetMs = targetTime * 1000;
+  const now = performance.now();
+  const elapsed = accumulatedMs + (now - startTime);
+  const remainingMs = Math.max(0, targetMs - elapsed);
+  const endIn = remainingMs;
+  const warnIn = Math.max(0, remainingMs - 15000);
+  // schedule warning if still ahead
+  if (!warningPlayed && remainingMs > 15000) {
+    warnTimeoutId = setTimeout(() => {
+      try { window.playWarningSound ? window.playWarningSound() : null; } catch (e) { /* ignore */ }
+      warningPlayed = true;
+    }, warnIn);
+  } else if (!warningPlayed && remainingMs > 0 && remainingMs <= 15000) {
+    try { window.playWarningSound ? window.playWarningSound() : null; } catch (e) { /* ignore */ }
+    warningPlayed = true;
+  }
+  // schedule a precise end tick to trigger completion exactly on time
+  endTimeoutId = setTimeout(() => { tickSkills(now + endIn); }, endIn);
+}
+
+function ensureFallbackTimer() {
+  // Only run interval when tab is hidden; rAF handles visible case
+  if (document.hidden) {
+    if (!fallbackIntervalId) {
+      fallbackIntervalId = setInterval(() => { tickSkills(performance.now()); }, 250);
+    }
+  } else if (fallbackIntervalId) {
+    clearInterval(fallbackIntervalId);
+    fallbackIntervalId = null;
+  }
+}
+
+// Keep fallback aligned with visibility changes
+document.addEventListener('visibilitychange', () => {
+  if (isRunning()) ensureFallbackTimer(); else if (fallbackIntervalId) { clearInterval(fallbackIntervalId); fallbackIntervalId = null; }
+});
 

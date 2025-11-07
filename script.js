@@ -27,42 +27,22 @@ let serialPort = null;
 // cache last mode (0=driver/red, 1=autonomous/blue) for Skills to preserve mode when disabling
 let skillsLastModeBit = 0;
 
-// play short start sound on user-initiated start/resume clicks
-function playStartSound() {
-  try {
-    const audio = new Audio('audio/start.wav');
-    audio.currentTime = 0;
-    // Fire and forget; browsers allow this on user gesture
-    audio.play().catch(() => { /* ignore autoplay/other play issues */ });
-  } catch (e) {
-    // eslint-disable-next-line no-console
-    console.warn('start sound failed', e);
-  }
-}
+// Preload audio cues to reduce playback latency
+const audioCues = {
+  start: new Audio('audio/start.wav'),
+  pause: new Audio('audio/pause.wav'),
+  stop: new Audio('audio/stop.wav'),
+  warning: new Audio('audio/warning.wav')
+};
+try {
+  Object.values(audioCues).forEach(a => { a.preload = 'auto'; a.load?.(); });
+} catch {}
 
-// play short pause sound on user-initiated pause clicks
-function playPauseSound() {
-  try {
-    const audio = new Audio('audio/pause.wav');
-    audio.currentTime = 0;
-    audio.play().catch(() => { /* ignore autoplay/other play issues */ });
-  } catch (e) {
-    // eslint-disable-next-line no-console
-    console.warn('pause sound failed', e);
-  }
-}
-
-// play stop sound when a timer completes
-function playStopSound() {
-  try {
-    const audio = new Audio('audio/stop.wav');
-    audio.currentTime = 0;
-    audio.play().catch(() => { /* ignore autoplay/other play issues */ });
-  } catch (e) {
-    // eslint-disable-next-line no-console
-    console.warn('stop sound failed', e);
-  }
-}
+// audio helpers
+function playStartSound() { try { audioCues.start.currentTime = 0; audioCues.start.play().catch(()=>{}); } catch (e) { console.warn('start sound failed', e); } }
+function playPauseSound() { try { audioCues.pause.currentTime = 0; audioCues.pause.play().catch(()=>{}); } catch (e) { console.warn('pause sound failed', e); } }
+function playStopSound() { try { audioCues.stop.currentTime = 0; audioCues.stop.play().catch(()=>{}); } catch (e) { console.warn('stop sound failed', e); } }
+function playWarningSound() { try { audioCues.warning.currentTime = 0; audioCues.warning.play().catch(()=>{}); } catch (e) { console.warn('warning sound failed', e); } }
 
 function setPaired(val) {
   isPaired = !!val;
@@ -119,12 +99,15 @@ function initSerial() {
 }
 
 // Compose and send a byte compatible with the Switch tab protocol:
-// bit0 = enable (1=enabled), bit1 = mode (0=driver/red, 1=autonomous/blue)
+// NOTE: Hardware wiring uses inverted enable (active-low): logical enable=true -> wire 0
+// bit0 = enableWire (0=enabled, 1=disabled), bit1 = mode (0=driver/red, 1=autonomous/blue)
 async function sendSwitchState(enableBit, modeBit) {
   try {
     if (!serialPort || !serialPort.writable) return;
     const writer = serialPort.writable.getWriter();
-    const byte = ((modeBit & 1) << 1) | (enableBit & 1);
+    // Map logical enable to active-low wire value
+    const enableWire = enableBit ? 0 : 1;
+    const byte = ((modeBit & 1) << 1) | (enableWire & 1);
     await writer.write(new Uint8Array([byte]));
     writer.releaseLock();
     // eslint-disable-next-line no-console
@@ -149,6 +132,7 @@ function isPairedNow() {
 window.tryWebSerialPair = tryWebSerialPair;
 window.sendSwitchState = sendSwitchState;
 window.getSerialPort = () => serialPort;
+window.playWarningSound = playWarningSound;
 
 function updatePairingUI(pageIndex) {
   if (pageIndex == null) return;
